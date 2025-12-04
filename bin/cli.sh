@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+node "$(dirname "$0")/cli.ts" "$@"
