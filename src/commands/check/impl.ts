@@ -1,11 +1,12 @@
 import { exit } from 'node:process';
 import { Checker } from '../../checker/checker.ts';
 import { rootTsconfigProjectReferencesRule } from '../../checker/rules/root-tsconfig-project-references.ts';
+import { subTsconfigCompositeRule } from '../../checker/rules/sub-tsconfig-composite.ts';
 import { consumeAsyncGenerator } from '../../utils/consumeAsyncGenerator.ts';
 
 export default async ({ fix }: { fix: boolean }): Promise<void> => {
   const checker = new Checker({
-    rules: [rootTsconfigProjectReferencesRule],
+    rules: [rootTsconfigProjectReferencesRule, subTsconfigCompositeRule],
   });
 
   const lgtm = await consumeAsyncGenerator(checker[fix ? 'fix' : 'check'](), message => {
