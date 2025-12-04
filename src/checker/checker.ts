@@ -72,13 +72,13 @@ export class Checker {
     yield { type: 'log', content: `✏️ ${rule.description}` };
     if (rule.fix) {
       await rule.fix(this.ctx);
-      yield { type: 'log', content: '✅ FIXED!' };
+      yield { type: 'log', content: indent('✅ FIXED!') };
       return true;
     }
 
     const ok = yield* this.checkWithRule(rule);
     if (!ok) {
-      yield { type: 'error', content: '⚠️ No auto fix solution provided.' };
+      yield { type: 'error', content: indent('⚠️ No auto fix solution provided.') };
     }
     return ok;
   }
