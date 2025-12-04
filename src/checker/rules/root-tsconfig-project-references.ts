@@ -1,5 +1,5 @@
 import { globSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, normalize, relative } from 'node:path';
 import { applyEdits, modify, parse } from 'jsonc-parser';
 import z from 'zod';
 import type { Rule } from '../checker.ts';
@@ -7,7 +7,7 @@ import type { Rule } from '../checker.ts';
 const getExpectedReferencePaths = ({ projectRoot }: { projectRoot: string }) => {
   return globSync('*/**/tsconfig.json', { cwd: projectRoot, withFileTypes: true })
     .filter(dirent => dirent.isFile())
-    .map(dirent => join(projectRoot, dirent.parentPath));
+    .map(dirent => normalize(relative(projectRoot, dirent.parentPath)));
 };
 
 export const rootTsconfigProjectReferencesRule: Rule = {
@@ -27,7 +27,7 @@ export const rootTsconfigProjectReferencesRule: Rule = {
             .array(),
         })
         .parse(parse(readFileSync(rootTsConfigPath, 'utf8')))
-        .references.map(({ path }) => path),
+        .references.map(({ path }) => normalize(path)),
     );
 
     if (actualPaths.symmetricDifference(expectedReferencePaths).size === 0) {
