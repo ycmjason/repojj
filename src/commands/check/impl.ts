@@ -1,17 +1,15 @@
 import { exit } from 'node:process';
-import { Checker } from '../../checker/checker.ts';
+import { Checker, consumeAsyncGenerator } from '../../checker/checker.ts';
 import { rootTsconfigProjectReferencesRule } from '../../checker/rules/root-tsconfig-project-references.ts';
 
 export default async ({ fix }: { fix: boolean }): Promise<void> => {
-  const checkResults = new Checker({
+  const checker = new Checker({
     rules: [rootTsconfigProjectReferencesRule],
-  })[fix ? 'fix' : 'check']();
-  for await (const message of checkResults) {
-    console[message.type](message.content);
-  }
+  });
 
-  const { value: lgtm, done } = await checkResults.next();
-  if (!done) throw new Error('this should never happen!');
+  const lgtm = await consumeAsyncGenerator(checker[fix ? 'fix' : 'check'](), message => {
+    console[message.type](message.content);
+  });
 
   if (lgtm) {
     console.log('✅ lgtm!');

@@ -1,5 +1,5 @@
 import { exit } from 'node:process';
-import type { ExclusifyUnion } from 'type-fest';
+import type { ExclusifyUnion, Promisable } from 'type-fest';
 import { findProjectRoot } from '../utils/findProjectRoot.ts';
 import { formatAsBullet } from '../utils/formatAsBullet.ts';
 import { indent } from '../utils/indent.ts';
@@ -8,19 +8,33 @@ export type CheckerContext = {
   projectRoot: string;
 };
 
-type MaybePromise<T> = Promise<T> | T;
-
 export type Rule = {
   description: string;
   check: (
     ctx: CheckerContext,
-  ) => MaybePromise<ExclusifyUnion<{ ok: true } | { ok: false; errorMessages: string[] }>>;
-  fix?: (ctx: CheckerContext) => MaybePromise<void>;
+  ) => Promisable<ExclusifyUnion<{ ok: true } | { ok: false; errorMessages: string[] }>>;
+  fix?: (ctx: CheckerContext) => Promisable<void>;
 };
 
 type Message = {
   type: 'log' | 'error';
   content: string;
+};
+
+export const consumeAsyncGenerator = async <T extends AsyncGenerator<any, any, any>>(
+  generator: T,
+  cb: (yielded: T extends AsyncGenerator<infer U> ? U : never) => Promisable<void>,
+): Promise<T extends AsyncGenerator<any, infer U> ? U : never> => {
+  while (true) {
+    const { value, done } = await generator.next();
+
+    if (done) {
+      console.log('Return value:', value); // 'The Final Value'
+      return value;
+    }
+
+    await cb(value);
+  }
 };
 
 export class Checker {
