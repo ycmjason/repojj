@@ -4,7 +4,7 @@
   "description": "Opiniated monorepo helpers.",
   "license": "MIT",
   "type": "module",
-  "version": "1000.0.1",
+  "version": "1000.0.2",
   "files": [
     "bin",
     "src"
@@ -19,7 +19,7 @@
     "access": "public"
   },
   "bin": {
-    "repojj": "bin/cli.sh"
+    "repojj": "bin/cli.ts"
   },
   "engines": {
     "node": ">=24"
@@ -31,6 +31,7 @@
   "dependencies": {
     "@stricli/core": "^1.2.4",
     "jsonc-parser": "^3.3.1",
+    "tsx": "^4.21.0",
     "zod": "^4.1.13"
   },
   "devDependencies": {

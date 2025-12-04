@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S npx tsx
 import { run } from '@stricli/core';
 import { app } from '../src/app.ts';
 
