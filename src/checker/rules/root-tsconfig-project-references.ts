@@ -54,7 +54,15 @@ export const rootTsconfigProjectReferencesRule: Rule = {
       rootTsConfigPath,
       applyEdits(
         rootTsConfigString,
-        modify(rootTsConfigString, ['references'], [...expectedReferencePaths], {}),
+        modify(
+          rootTsConfigString,
+          ['references'],
+          expectedReferencePaths
+            .values()
+            .map(path => ({ path }))
+            .toArray(),
+          {},
+        ),
       ),
       'utf8',
     );
