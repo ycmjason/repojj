@@ -21,22 +21,6 @@ type Message = {
   content: string;
 };
 
-export const consumeAsyncGenerator = async <T extends AsyncGenerator<any, any, any>>(
-  generator: T,
-  cb: (yielded: T extends AsyncGenerator<infer U> ? U : never) => Promisable<void>,
-): Promise<T extends AsyncGenerator<any, infer U> ? U : never> => {
-  while (true) {
-    const { value, done } = await generator.next();
-
-    if (done) {
-      console.log('Return value:', value); // 'The Final Value'
-      return value;
-    }
-
-    await cb(value);
-  }
-};
-
 export class Checker {
   readonly rules: readonly Rule[];
   readonly ctx: CheckerContext = {
