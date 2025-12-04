@@ -1,0 +1,62 @@
+import { globSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { applyEdits, modify, parse } from 'jsonc-parser';
+import z from 'zod';
+import type { Rule } from '../checker.ts';
+
+const getExpectedReferencePaths = ({ projectRoot }: { projectRoot: string }) => {
+  return globSync('*/**/tsconfig.json', { cwd: projectRoot, withFileTypes: true })
+    .filter(dirent => dirent.isFile())
+    .map(dirent => join(projectRoot, dirent.parentPath));
+};
+
+export const rootTsconfigProjectReferencesRule: Rule = {
+  description: 'root tsconfig.json should contain all sub-directories containing a tsconfig.json',
+  check({ projectRoot }) {
+    const rootTsConfigPath = join(projectRoot, 'tsconfig.json');
+
+    const expectedReferencePaths = new Set(getExpectedReferencePaths({ projectRoot }));
+
+    const actualPaths = new Set(
+      z
+        .object({
+          references: z
+            .object({
+              path: z.string(),
+            })
+            .array(),
+        })
+        .parse(parse(readFileSync(rootTsConfigPath, 'utf8')))
+        .references.map(({ path }) => path),
+    );
+
+    if (actualPaths.symmetricDifference(expectedReferencePaths).size === 0) {
+      return { ok: true };
+    }
+
+    const missingPaths = expectedReferencePaths.difference(actualPaths);
+    const unexpectedPaths = actualPaths.difference(expectedReferencePaths);
+
+    return {
+      ok: false,
+      errorMessages: [
+        ...missingPaths.values().map(missingPath => `Cannot find ${missingPath}`),
+        ...unexpectedPaths.values().map(unexpectedPath => `Unexpected ${unexpectedPath}`),
+      ],
+    };
+  },
+
+  fix({ projectRoot }) {
+    const rootTsConfigPath = join(projectRoot, 'tsconfig.json');
+    const expectedReferencePaths = new Set(getExpectedReferencePaths({ projectRoot }));
+    const rootTsConfigString = readFileSync(rootTsConfigPath, 'utf8');
+    writeFileSync(
+      rootTsConfigPath,
+      applyEdits(
+        rootTsConfigString,
+        modify(rootTsConfigString, ['references'], expectedReferencePaths, {}),
+      ),
+      'utf8',
+    );
+  },
+};
