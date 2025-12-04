@@ -4,7 +4,7 @@
   "description": "Opiniated monorepo helpers.",
   "license": "MIT",
   "type": "module",
-  "version": "1000.1.0",
+  "version": "1000.1.1",
   "files": [
     "bin",
     "src"

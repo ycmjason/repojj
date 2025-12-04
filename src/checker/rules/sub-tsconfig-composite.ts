@@ -16,7 +16,7 @@ export const subTsconfigCompositeRule: Rule = {
     for (const tsconfigPath of tsconfigPaths) {
       const stdout = (() => {
         try {
-          execSync(`npx tsc --showConfig -p "${tsconfigPath}"`, {
+          return execSync(`npx tsc --showConfig -p "${tsconfigPath}"`, {
             encoding: 'utf8',
             cwd: projectRoot,
             stdio: ['ignore', 'pipe', 'ignore'], // Ignore stderr to avoid cluttering output on failure
