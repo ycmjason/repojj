@@ -40,6 +40,7 @@ export class Checker {
     let ok = true;
 
     for (const rule of this.rules) {
+      yield { type: 'log', content: `📋 Rule: ${rule.description}` };
       ok &&= yield* this.checkWithRule(rule);
     }
 
@@ -47,7 +48,6 @@ export class Checker {
   }
 
   async *checkWithRule(rule: Rule): AsyncGenerator<Message, boolean, unknown> {
-    yield { type: 'log', content: `📋 ${rule.description}` };
     const { errorMessages = [] } = await rule.check(this.ctx);
     if (errorMessages.length > 0) {
       yield { type: 'error', content: indent(formatAsBullet(errorMessages, '❌')) };
@@ -69,17 +69,14 @@ export class Checker {
   }
 
   async *fixWithRule(rule: Rule): AsyncGenerator<Message, boolean, unknown> {
-    yield { type: 'log', content: `✏️ ${rule.description}` };
+    yield { type: 'log', content: `✏️ Rule: ${rule.description}` };
     if (rule.fix) {
       await rule.fix(this.ctx);
       yield { type: 'log', content: indent('✅ FIXED!') };
       return true;
     }
 
-    const ok = yield* this.checkWithRule(rule);
-    if (!ok) {
-      yield { type: 'error', content: indent('⚠️ No auto fix solution provided.') };
-    }
-    return ok;
+    yield { type: 'error', content: indent('⚠️ No auto fix solution for this rule.') };
+    return yield* this.checkWithRule(rule);
   }
 }

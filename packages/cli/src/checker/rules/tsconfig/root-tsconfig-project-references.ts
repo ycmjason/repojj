@@ -1,8 +1,13 @@
 import { glob, readFile, writeFile } from 'node:fs/promises';
 import { join, normalize, relative } from 'node:path';
 import { applyEdits, modify, parse } from 'jsonc-parser';
-import { TsconfigWithReferencesSchema } from '../../../schemas/tsconfig.ts';
 import type { Rule } from '../../checker.ts';
+import { TsconfigWithReferencesSchema } from './schemas/tsconfig.ts';
+
+const toRelativePath = (path: string) => {
+  if (path.startsWith('.')) return path;
+  return `./${path}`;
+};
 
 const getExpectedReferencePaths = async ({ projectRoot }: { projectRoot: string }) => {
   return (
@@ -15,7 +20,7 @@ const getExpectedReferencePaths = async ({ projectRoot }: { projectRoot: string 
     )
   )
     .filter(dirent => dirent.isFile())
-    .map(dirent => normalize(relative(projectRoot, dirent.parentPath)));
+    .map(dirent => toRelativePath(normalize(relative(projectRoot, dirent.parentPath))));
 };
 
 export const rootTsconfigProjectReferencesRule: Rule = {

@@ -4,34 +4,70 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@biomejs/biome':
+      specifier: ^2.3.8
+      version: 2.3.8
+    '@stricli/core':
+      specifier: ^1.2.4
+      version: 1.2.4
+    '@types/node':
+      specifier: ~24.10.1
+      version: 24.10.1
+    jsonc-parser:
+      specifier: ^3.3.1
+      version: 3.3.1
+    tsx:
+      specifier: ^4.21.0
+      version: 4.21.0
+    type-fest:
+      specifier: ^5.2.0
+      version: 5.2.0
+    typescript:
+      specifier: 'catalog:'
+      version: 5.9.3
+    zod:
+      specifier: ^4.1.13
+      version: 4.1.13
+
 importers:
 
   .:
-    dependencies:
-      '@stricli/core':
-        specifier: ^1.2.4
-        version: 1.2.4
-      jsonc-parser:
-        specifier: ^3.3.1
-        version: 3.3.1
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
-      zod:
-        specifier: ^4.1.13
-        version: 4.1.13
     devDependencies:
       '@biomejs/biome':
-        specifier: ^2.3.8
+        specifier: 'catalog:'
         version: 2.3.8
       '@types/node':
-        specifier: ~24.10.1
+        specifier: 'catalog:'
         version: 24.10.1
+      repojj:
+        specifier: workspace:*
+        version: link:packages/cli
       type-fest:
-        specifier: ^5.2.0
+        specifier: 'catalog:'
         version: 5.2.0
       typescript:
-        specifier: 5.9.3
+        specifier: 'catalog:'
+        version: 5.9.3
+
+  packages/cli:
+    dependencies:
+      '@stricli/core':
+        specifier: 'catalog:'
+        version: 1.2.4
+      jsonc-parser:
+        specifier: 'catalog:'
+        version: 3.3.1
+      tsx:
+        specifier: 'catalog:'
+        version: 4.21.0
+      zod:
+        specifier: 'catalog:'
+        version: 4.1.13
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
         version: 5.9.3
 
 packages:

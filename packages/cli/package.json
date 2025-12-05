@@ -1,0 +1,39 @@
+{
+  "name": "repojj",
+  "author": "ycm.jason",
+  "description": "Opiniated monorepo helpers.",
+  "license": "MIT",
+  "type": "module",
+  "version": "1000.4.0",
+  "files": [
+    "bin",
+    "src"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ycmjason/repojj/tree/main/packages/cli"
+  },
+  "publishConfig": {
+    "provenance": true,
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
+  "bin": {
+    "repojj": "bin/cli.ts"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@stricli/core": "catalog:",
+    "jsonc-parser": "catalog:",
+    "tsx": "catalog:",
+    "zod": "catalog:"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}

@@ -1,2 +1,22 @@
+packages:
+  - packages/*
+
+catalog:
+  '@biomejs/biome': ^2.3.8
+  '@stricli/core': ^1.2.4
+  '@types/node': ~24.10.1
+  jsonc-parser: ^3.3.1
+  tsx: ^4.21.0
+  type-fest: ^5.2.0
+  typescript: 'catalog:'
+  zod: ^4.1.13
+
+catalogMode: strict
+
+cleanupUnusedCatalogs: true
+
 onlyBuiltDependencies:
   - esbuild
+
+publicHoistPattern:
+  - tsx
