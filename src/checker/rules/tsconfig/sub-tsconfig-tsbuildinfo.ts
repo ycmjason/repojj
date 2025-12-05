@@ -1,4 +1,4 @@
-import { globSync } from 'node:fs';
+import { glob } from 'node:fs/promises';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import z from 'zod';
 import { TsconfigWithReferencesSchema } from '../../../schemas/tsconfig.ts';
@@ -9,39 +9,31 @@ import { resolveTsConfig } from './utils/resolveTsConfig.ts';
 export const subTsconfigTsBuildInfoRule: Rule = {
   description: 'all sub-tsconfig.json should have tsBuildInfoFile set correctly',
   async check({ projectRoot }) {
-    const tsconfigPaths = globSync(['*/**/tsconfig.json', '*/**/tsconfig.*.json'], {
-      cwd: projectRoot,
-      withFileTypes: true,
-    })
-      .filter(dirent => dirent.isFile())
-      .map(dirent => join(dirent.parentPath, dirent.name));
+    const tsconfigDirents = await Array.fromAsync(
+      glob(['*/**/tsconfig.json', '*/**/tsconfig.*.json'], {
+        cwd: projectRoot,
+        exclude: ['**/node_modules'],
+        withFileTypes: true,
+      }),
+    );
 
     const tsconfigs = await Promise.all(
-      tsconfigPaths.map(async path => {
-        return await (async () => {
-          try {
-            return {
-              path,
-              tsconfig: exclusifyUnion(
-                z
-                  .union([
-                    TsconfigWithReferencesSchema,
-                    z.object({
-                      compilerOptions: z
-                        .object({
-                          tsBuildInfoFile: z.string().optional(),
-                        })
-                        .optional(),
-                    }),
-                  ])
-                  .parse(await resolveTsConfig(path, { cwd: projectRoot })),
-              ),
-            };
-          } catch {
-            return { path, tsconfig: undefined };
-          }
-        })();
-      }),
+      tsconfigDirents
+        .filter(dirent => dirent.isFile())
+        .map(dirent => join(dirent.parentPath, dirent.name))
+        .map(async path => ({
+          path,
+          tsconfig: exclusifyUnion(
+            z
+              .union([
+                TsconfigWithReferencesSchema,
+                z.object({
+                  compilerOptions: z.object({ tsBuildInfoFile: z.string().optional() }).optional(),
+                }),
+              ])
+              .parse(await resolveTsConfig(path, { cwd: projectRoot })),
+          ),
+        })),
     );
 
     const errorMessages = tsconfigs.flatMap(({ path, tsconfig }) => {
@@ -57,7 +49,7 @@ export const subTsconfigTsBuildInfoRule: Rule = {
 
       if (!actualTsBuildInfoFile) {
         return [
-          `Expected \`compilerOptions.tsBuildInfoFile\` in \`${path}\` to be set to \`${expectedRelativePath}\``,
+          `Expected \`compilerOptions.tsBuildInfoFile\` in \`${relative(projectRoot, path)}\` to be set to \`${expectedRelativePath}\``,
         ];
       }
 
@@ -66,7 +58,7 @@ export const subTsconfigTsBuildInfoRule: Rule = {
         resolve(dirname(path), expectedRelativePath)
       ) {
         return [
-          `Expected \`compilerOptions.tsBuildInfoFile\` in \`${path}\` to be \`${expectedRelativePath}\`, but got \`${actualTsBuildInfoFile}\``,
+          `Expected \`compilerOptions.tsBuildInfoFile\` in \`${relative(projectRoot, path)}\` to be \`${expectedRelativePath}\`, but got \`${actualTsBuildInfoFile}\``,
         ];
       }
 

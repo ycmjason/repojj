@@ -1,25 +1,33 @@
-import { globSync, readFileSync, writeFileSync } from 'node:fs';
+import { glob, readFile, writeFile } from 'node:fs/promises';
 import { join, normalize, relative } from 'node:path';
 import { applyEdits, modify, parse } from 'jsonc-parser';
 import { TsconfigWithReferencesSchema } from '../../../schemas/tsconfig.ts';
 import type { Rule } from '../../checker.ts';
 
-const getExpectedReferencePaths = ({ projectRoot }: { projectRoot: string }) => {
-  return globSync('*/**/tsconfig.json', { cwd: projectRoot, withFileTypes: true })
+const getExpectedReferencePaths = async ({ projectRoot }: { projectRoot: string }) => {
+  return (
+    await Array.fromAsync(
+      glob('*/**/tsconfig.json', {
+        cwd: projectRoot,
+        exclude: ['**/node_modules'],
+        withFileTypes: true,
+      }),
+    )
+  )
     .filter(dirent => dirent.isFile())
     .map(dirent => normalize(relative(projectRoot, dirent.parentPath)));
 };
 
 export const rootTsconfigProjectReferencesRule: Rule = {
   description: 'root tsconfig.json should contain all sub-directories containing a tsconfig.json',
-  check({ projectRoot }) {
+  async check({ projectRoot }) {
     const rootTsConfigPath = join(projectRoot, 'tsconfig.json');
 
-    const expectedReferencePaths = new Set(getExpectedReferencePaths({ projectRoot }));
+    const expectedReferencePaths = new Set(await getExpectedReferencePaths({ projectRoot }));
 
     const actualPaths = new Set(
       TsconfigWithReferencesSchema.parse(
-        parse(readFileSync(rootTsConfigPath, 'utf8')),
+        parse(await readFile(rootTsConfigPath, 'utf8')),
       ).references.map(({ path }) => normalize(path)),
     );
 
@@ -39,11 +47,11 @@ export const rootTsconfigProjectReferencesRule: Rule = {
     };
   },
 
-  fix({ projectRoot }) {
+  async fix({ projectRoot }) {
     const rootTsConfigPath = join(projectRoot, 'tsconfig.json');
-    const expectedReferencePaths = new Set(getExpectedReferencePaths({ projectRoot }));
-    const rootTsConfigString = readFileSync(rootTsConfigPath, 'utf8');
-    writeFileSync(
+    const expectedReferencePaths = new Set(await getExpectedReferencePaths({ projectRoot }));
+    const rootTsConfigString = await readFile(rootTsConfigPath, 'utf8');
+    await writeFile(
       rootTsConfigPath,
       applyEdits(
         rootTsConfigString,

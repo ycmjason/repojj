@@ -1,4 +1,4 @@
-import { globSync } from 'node:fs';
+import { glob } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import z from 'zod';
 import { TsconfigWithReferencesSchema } from '../../../schemas/tsconfig.ts';
@@ -9,39 +9,31 @@ import { resolveTsConfig } from './utils/resolveTsConfig.ts';
 export const subTsconfigCompositeRule: Rule = {
   description: 'all sub-tsconfig.json should have composite: true',
   async check({ projectRoot }) {
-    const tsconfigPaths = globSync(['*/**/tsconfig.json', '*/**/tsconfig.*.json'], {
-      cwd: projectRoot,
-      withFileTypes: true,
-    })
-      .filter(dirent => dirent.isFile())
-      .map(dirent => join(dirent.parentPath, dirent.name));
+    const tsconfigDirents = await Array.fromAsync(
+      glob(['*/**/tsconfig.json', '*/**/tsconfig.*.json'], {
+        cwd: projectRoot,
+        exclude: ['**/node_modules'],
+        withFileTypes: true,
+      }),
+    );
 
     const tsconfigs = await Promise.all(
-      tsconfigPaths.map(async path => {
-        return await (async () => {
-          try {
-            return {
-              path,
-              tsconfig: exclusifyUnion(
-                z
-                  .union([
-                    TsconfigWithReferencesSchema,
-                    z.object({
-                      compilerOptions: z
-                        .object({
-                          composite: z.boolean().optional(),
-                        })
-                        .optional(),
-                    }),
-                  ])
-                  .parse(await resolveTsConfig(path, { cwd: projectRoot })),
-              ),
-            };
-          } catch {
-            return { path, tsconfig: undefined };
-          }
-        })();
-      }),
+      tsconfigDirents
+        .filter(dirent => dirent.isFile())
+        .map(dirent => join(dirent.parentPath, dirent.name))
+        .map(async path => ({
+          path,
+          tsconfig: exclusifyUnion(
+            z
+              .union([
+                TsconfigWithReferencesSchema,
+                z.object({
+                  compilerOptions: z.object({ composite: z.boolean().optional() }).optional(),
+                }),
+              ])
+              .parse(await resolveTsConfig(path, { cwd: projectRoot })),
+          ),
+        })),
     );
 
     const errorMessages = tsconfigs.flatMap(({ path, tsconfig }) => {

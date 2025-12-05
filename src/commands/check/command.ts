@@ -1,4 +1,6 @@
 import { buildCommand } from '@stricli/core';
+import { formatAsBullet } from '../../utils/formatAsBullet.ts';
+import { RULES } from './RULES.ts';
 
 export const checkCommand = buildCommand({
   loader: async () => import('./impl.ts'),
@@ -12,6 +14,7 @@ export const checkCommand = buildCommand({
   },
   docs: {
     brief: 'Run all checks',
-    fullDescription: `Perform checks`,
+    fullDescription: `Perform checks with the following rules:
+${formatAsBullet(RULES.map(({ description }) => description))}`,
   },
 });
