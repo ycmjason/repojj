@@ -1,13 +1,10 @@
-import { exec } from 'node:child_process';
 import { globSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { promisify } from 'node:util';
 import z from 'zod';
-import { TsconfigWithReferencesSchema } from '../../schemas/tsconfig.ts';
-import { exclusifyUnion } from '../../utils/exclusifyUnion.ts';
-import type { Rule } from '../checker.ts';
-
-const execP = promisify(exec);
+import { TsconfigWithReferencesSchema } from '../../../schemas/tsconfig.ts';
+import { exclusifyUnion } from '../../../utils/exclusifyUnion.ts';
+import type { Rule } from '../../checker.ts';
+import { resolveTsConfig } from './utils/resolveTsConfig.ts';
 
 export const subTsconfigCompositeRule: Rule = {
   description: 'all sub-tsconfig.json should have composite: true',
@@ -37,16 +34,7 @@ export const subTsconfigCompositeRule: Rule = {
                         .optional(),
                     }),
                   ])
-                  .parse(
-                    JSON.parse(
-                      (
-                        await execP(`npx tsc --showConfig -p "${path}"`, {
-                          encoding: 'utf8',
-                          cwd: projectRoot,
-                        })
-                      ).stdout,
-                    ),
-                  ),
+                  .parse(await resolveTsConfig(path, { cwd: projectRoot })),
               ),
             };
           } catch {
@@ -56,20 +44,19 @@ export const subTsconfigCompositeRule: Rule = {
       }),
     );
 
-    const errorMessages: string[] = [];
-
-    for (const { path, tsconfig } of tsconfigs) {
+    const errorMessages = tsconfigs.flatMap(({ path, tsconfig }) => {
       if (tsconfig === undefined) {
-        errorMessages.push('Unable to call tsc at project root!');
-        continue;
+        return [`Unable to resolve tsconfig for ${relative(projectRoot, path)}`];
       }
 
-      if (tsconfig.references) continue;
+      if (tsconfig.references) return [];
 
       if (tsconfig.compilerOptions?.composite !== true) {
-        errorMessages.push(`${relative(projectRoot, path)} should have composite: true`);
+        return [`${relative(projectRoot, path)} should have composite: true`];
       }
-    }
+
+      return [];
+    });
 
     if (errorMessages.length > 0) {
       return { ok: false, errorMessages };

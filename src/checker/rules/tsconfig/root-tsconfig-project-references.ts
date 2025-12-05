@@ -1,8 +1,8 @@
 import { globSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, normalize, relative } from 'node:path';
 import { applyEdits, modify, parse } from 'jsonc-parser';
-import { TsconfigWithReferencesSchema } from '../../schemas/tsconfig.ts';
-import type { Rule } from '../checker.ts';
+import { TsconfigWithReferencesSchema } from '../../../schemas/tsconfig.ts';
+import type { Rule } from '../../checker.ts';
 
 const getExpectedReferencePaths = ({ projectRoot }: { projectRoot: string }) => {
   return globSync('*/**/tsconfig.json', { cwd: projectRoot, withFileTypes: true })
