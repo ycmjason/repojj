@@ -19,46 +19,55 @@ export const subTsconfigCompositeRule: Rule = {
       .filter(dirent => dirent.isFile())
       .map(dirent => join(dirent.parentPath, dirent.name));
 
+    const tsconfigs = await Promise.all(
+      tsconfigPaths.map(async path => {
+        return await (async () => {
+          try {
+            return {
+              path,
+              tsconfig: exclusifyUnion(
+                z
+                  .union([
+                    TsconfigWithReferencesSchema,
+                    z.object({
+                      compilerOptions: z
+                        .object({
+                          composite: z.boolean().optional(),
+                        })
+                        .optional(),
+                    }),
+                  ])
+                  .parse(
+                    JSON.parse(
+                      (
+                        await execP(`npx tsc --showConfig -p "${path}"`, {
+                          encoding: 'utf8',
+                          cwd: projectRoot,
+                        })
+                      ).stdout,
+                    ),
+                  ),
+              ),
+            };
+          } catch {
+            return { path, tsconfig: undefined };
+          }
+        })();
+      }),
+    );
+
     const errorMessages: string[] = [];
 
-    for (const tsconfigPath of tsconfigPaths) {
-      const stdout = await (async () => {
-        try {
-          return (
-            await execP(`npx tsc --showConfig -p "${tsconfigPath}"`, {
-              encoding: 'utf8',
-              cwd: projectRoot,
-            })
-          ).stdout;
-        } catch {
-          return undefined;
-        }
-      })();
-
-      if (stdout === undefined) {
+    for (const { path, tsconfig } of tsconfigs) {
+      if (tsconfig === undefined) {
         errorMessages.push('Unable to call tsc at project root!');
         continue;
       }
 
-      const config = exclusifyUnion(
-        z
-          .union([
-            TsconfigWithReferencesSchema,
-            z.object({
-              compilerOptions: z
-                .object({
-                  composite: z.boolean().optional(),
-                })
-                .optional(),
-            }),
-          ])
-          .parse(JSON.parse(stdout)),
-      );
+      if (tsconfig.references) continue;
 
-      if (config.references) continue;
-
-      if (config.compilerOptions?.composite !== true) {
-        errorMessages.push(`${relative(projectRoot, tsconfigPath)} should have composite: true`);
+      if (tsconfig.compilerOptions?.composite !== true) {
+        errorMessages.push(`${relative(projectRoot, path)} should have composite: true`);
       }
     }
 
