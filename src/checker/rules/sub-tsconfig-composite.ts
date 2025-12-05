@@ -2,12 +2,17 @@ import { execSync } from 'node:child_process';
 import { globSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import z from 'zod';
+import { TsconfigWithReferencesSchema } from '../../schemas/tsconfig.ts';
+import { exclusifyUnion } from '../../utils/exclusifyUnion.ts';
 import type { Rule } from '../checker.ts';
 
 export const subTsconfigCompositeRule: Rule = {
   description: 'all sub-tsconfig.json should have composite: true',
   check({ projectRoot }) {
-    const tsconfigPaths = globSync('*/**/tsconfig.json', { cwd: projectRoot, withFileTypes: true })
+    const tsconfigPaths = globSync(['*/**/tsconfig.json', '*/**/tsconfig.*.json'], {
+      cwd: projectRoot,
+      withFileTypes: true,
+    })
       .filter(dirent => dirent.isFile())
       .map(dirent => join(dirent.parentPath, dirent.name));
 
@@ -31,15 +36,22 @@ export const subTsconfigCompositeRule: Rule = {
         continue;
       }
 
-      const config = z
-        .object({
-          compilerOptions: z
-            .object({
-              composite: z.boolean().optional(),
-            })
-            .optional(),
-        })
-        .parse(JSON.parse(stdout));
+      const config = exclusifyUnion(
+        z
+          .union([
+            TsconfigWithReferencesSchema,
+            z.object({
+              compilerOptions: z
+                .object({
+                  composite: z.boolean().optional(),
+                })
+                .optional(),
+            }),
+          ])
+          .parse(JSON.parse(stdout)),
+      );
+
+      if (config.references) continue;
 
       if (config.compilerOptions?.composite !== true) {
         errorMessages.push(`${relative(projectRoot, tsconfigPath)} should have composite: true`);

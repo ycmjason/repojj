@@ -1,7 +1,7 @@
 import { globSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, normalize, relative } from 'node:path';
 import { applyEdits, modify, parse } from 'jsonc-parser';
-import z from 'zod';
+import { TsconfigWithReferencesSchema } from '../../schemas/tsconfig.ts';
 import type { Rule } from '../checker.ts';
 
 const getExpectedReferencePaths = ({ projectRoot }: { projectRoot: string }) => {
@@ -18,16 +18,9 @@ export const rootTsconfigProjectReferencesRule: Rule = {
     const expectedReferencePaths = new Set(getExpectedReferencePaths({ projectRoot }));
 
     const actualPaths = new Set(
-      z
-        .object({
-          references: z
-            .object({
-              path: z.string(),
-            })
-            .array(),
-        })
-        .parse(parse(readFileSync(rootTsConfigPath, 'utf8')))
-        .references.map(({ path }) => normalize(path)),
+      TsconfigWithReferencesSchema.parse(
+        parse(readFileSync(rootTsConfigPath, 'utf8')),
+      ).references.map(({ path }) => normalize(path)),
     );
 
     if (actualPaths.symmetricDifference(expectedReferencePaths).size === 0) {
