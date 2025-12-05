@@ -1,14 +1,17 @@
-import { execSync } from 'node:child_process';
+import { exec } from 'node:child_process';
 import { globSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { promisify } from 'node:util';
 import z from 'zod';
 import { TsconfigWithReferencesSchema } from '../../schemas/tsconfig.ts';
 import { exclusifyUnion } from '../../utils/exclusifyUnion.ts';
 import type { Rule } from '../checker.ts';
 
+const execP = promisify(exec);
+
 export const subTsconfigCompositeRule: Rule = {
   description: 'all sub-tsconfig.json should have composite: true',
-  check({ projectRoot }) {
+  async check({ projectRoot }) {
     const tsconfigPaths = globSync(['*/**/tsconfig.json', '*/**/tsconfig.*.json'], {
       cwd: projectRoot,
       withFileTypes: true,
@@ -19,13 +22,14 @@ export const subTsconfigCompositeRule: Rule = {
     const errorMessages: string[] = [];
 
     for (const tsconfigPath of tsconfigPaths) {
-      const stdout = (() => {
+      const stdout = await (async () => {
         try {
-          return execSync(`npx tsc --showConfig -p "${tsconfigPath}"`, {
-            encoding: 'utf8',
-            cwd: projectRoot,
-            stdio: ['ignore', 'pipe', 'ignore'], // Ignore stderr to avoid cluttering output on failure
-          });
+          return (
+            await execP(`npx tsc --showConfig -p "${tsconfigPath}"`, {
+              encoding: 'utf8',
+              cwd: projectRoot,
+            })
+          ).stdout;
         } catch {
           return undefined;
         }
