@@ -9,6 +9,10 @@ const toRelativePath = (path: string) => {
   return `./${path}`;
 };
 
+const normalizeReferencePath = (path: string, { cwd }: { cwd: string }) => {
+  return toRelativePath(normalize(relative(cwd, path)));
+};
+
 const getExpectedReferencePaths = async ({ projectRoot }: { projectRoot: string }) => {
   return (
     await Array.fromAsync(
@@ -20,7 +24,7 @@ const getExpectedReferencePaths = async ({ projectRoot }: { projectRoot: string 
     )
   )
     .filter(dirent => dirent.isFile())
-    .map(dirent => toRelativePath(normalize(relative(projectRoot, dirent.parentPath))));
+    .map(dirent => normalizeReferencePath(dirent.parentPath, { cwd: projectRoot }));
 };
 
 export const rootTsconfigProjectReferencesRule: Rule = {
@@ -33,7 +37,7 @@ export const rootTsconfigProjectReferencesRule: Rule = {
     const actualPaths = new Set(
       TsconfigWithReferencesSchema.parse(
         parse(await readFile(rootTsConfigPath, 'utf8')),
-      ).references.map(({ path }) => normalize(path)),
+      ).references.map(({ path }) => normalizeReferencePath(path, { cwd: projectRoot })),
     );
 
     if (actualPaths.symmetricDifference(expectedReferencePaths).size === 0) {
