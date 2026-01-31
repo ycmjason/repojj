@@ -2,14 +2,15 @@ packages:
   - packages/*
 
 catalog:
-  '@biomejs/biome': ^2.3.8
-  '@stricli/core': ^1.2.4
-  '@types/node': ~24.10.1
+  '@biomejs/biome': ^2.3.13
+  '@stricli/core': ^1.2.5
+  '@types/node': ~25.1.0
   jsonc-parser: ^3.3.1
+  pkgroll: ^2.23.0
   tsx: ^4.21.0
-  type-fest: ^5.2.0
+  type-fest: ^5.4.3
   typescript: ^5.9.3
-  zod: ^4.1.13
+  zod: ^4.3.6
 
 catalogMode: strict
 

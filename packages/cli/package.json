@@ -4,11 +4,10 @@
   "description": "Opiniated monorepo helpers.",
   "license": "MIT",
   "type": "module",
-  "version": "1000.5.1",
+  "version": "2026.1.35",
   "files": [
     "README.md",
-    "bin",
-    "src"
+    "dist"
   ],
   "repository": {
     "type": "git",
@@ -20,7 +19,7 @@
     "access": "public"
   },
   "bin": {
-    "repojj": "bin/cli.ts"
+    "repojj": "./dist/bin/cli.mjs"
   },
   "engines": {
     "node": ">=24"
@@ -28,13 +27,9 @@
   "dependencies": {
     "@stricli/core": "catalog:",
     "jsonc-parser": "catalog:",
-    "tsx": "catalog:",
     "zod": "catalog:"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
-  },
-  "devDependencies": {
-    "typescript": "catalog:"
   }
 }
