@@ -95,7 +95,6 @@ The `repojj:postfix` script runs automatically after `repojj check --fix` comple
 ## Requirements
 
 - Node.js >= 24
-- TypeScript ^5.0.0 (peer dependency)
 
 ## Example Output
 

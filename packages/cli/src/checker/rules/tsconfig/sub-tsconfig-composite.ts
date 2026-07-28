@@ -31,7 +31,9 @@ const getTsconfigsNeedingComposite = async ({
 export const subTsconfigCompositeRule: Rule = {
   description: 'all sub-tsconfig.json should have composite: true',
   async check({ projectRoot }) {
-    const tsconfigsNeedingComposite = await getTsconfigsNeedingComposite({ projectRoot });
+    const tsconfigsNeedingComposite = await getTsconfigsNeedingComposite({
+      projectRoot,
+    });
 
     const errorMessages = tsconfigsNeedingComposite.map(
       ({ path }) => `${relative(projectRoot, path)} should have composite: true`,
@@ -45,7 +47,9 @@ export const subTsconfigCompositeRule: Rule = {
   },
 
   async fix({ projectRoot }) {
-    const tsconfigsNeedingComposite = await getTsconfigsNeedingComposite({ projectRoot });
+    const tsconfigsNeedingComposite = await getTsconfigsNeedingComposite({
+      projectRoot,
+    });
 
     await Promise.all(
       tsconfigsNeedingComposite.map(async ({ path }) => {

@@ -50,7 +50,10 @@ export class Checker {
   async *checkWithRule(rule: Rule): AsyncGenerator<Message, boolean, unknown> {
     const { errorMessages = [] } = await rule.check(this.ctx);
     if (errorMessages.length > 0) {
-      yield { type: 'error', content: indent(formatAsBullet(errorMessages, '❌')) };
+      yield {
+        type: 'error',
+        content: indent(formatAsBullet(errorMessages, '❌')),
+      };
       return false;
     } else {
       yield { type: 'log', content: indent('✅ LGTM!') };
@@ -76,7 +79,10 @@ export class Checker {
       return true;
     }
 
-    yield { type: 'error', content: indent('⚠️ No auto fix solution for this rule.') };
+    yield {
+      type: 'error',
+      content: indent('⚠️ No auto fix solution for this rule.'),
+    };
     return yield* this.checkWithRule(rule);
   }
 }
