@@ -5,6 +5,7 @@ catalog:
   '@biomejs/biome': ^2.3.13
   '@stricli/core': ^1.2.5
   '@types/node': ~25.1.0
+  get-tsconfig: ^4.14.0
   jsonc-parser: ^3.3.1
   pkgroll: ^2.23.0
   tsx: ^4.21.0

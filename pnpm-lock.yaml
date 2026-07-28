@@ -15,6 +15,9 @@ catalogs:
     '@types/node':
       specifier: ~25.1.0
       version: 25.1.0
+    get-tsconfig:
+      specifier: ^4.14.0
+      version: 4.14.0
     jsonc-parser:
       specifier: ^3.3.1
       version: 3.3.1
@@ -65,12 +68,12 @@ importers:
       '@stricli/core':
         specifier: 'catalog:'
         version: 1.2.5
+      get-tsconfig:
+        specifier: 'catalog:'
+        version: 4.14.0
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.3
       zod:
         specifier: 'catalog:'
         version: 4.3.6
@@ -730,6 +733,9 @@ packages:
   get-tsconfig@4.13.0:
     resolution: {integrity: sha512-1VKTZJCwBrvbd+Wn3AOgQP/2Av+TfTCOlE4AcRJE72W1ksZXbAx8PPBR9RzgTeSPzlPMHrbANMH3LbltH73wxQ==}
 
+  get-tsconfig@4.14.0:
+    resolution: {integrity: sha512-yTb+8DXzDREzgvYmh6s9vHsSVCHeC0G3PI5bEXNBHtmshPnO+S5O7qgLEOn0I5QvMy6kpZN8K1NKGyilLb93wA==}
+
   glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
     engines: {node: '>= 6'}
@@ -1312,6 +1318,10 @@ snapshots:
   function-bind@1.1.2: {}
 
   get-tsconfig@4.13.0:
+    dependencies:
+      resolve-pkg-maps: 1.0.0
+
+  get-tsconfig@4.14.0:
     dependencies:
       resolve-pkg-maps: 1.0.0
 

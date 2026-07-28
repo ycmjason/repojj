@@ -1,48 +1,22 @@
-import path from 'node:path';
-import ts from 'typescript';
+import { parseTsconfig, type TsConfigJsonResolved } from 'get-tsconfig';
 
-const pathToTsconfig = new Map<string, any>();
+const pathToTsconfig = new Map<string, TsConfigJsonResolved>();
 
-export const resolveTsConfig = async (
-  configPath: string,
-  { cwd }: { cwd: string },
-): Promise<any> => {
-  if (pathToTsconfig.has(configPath)) {
-    return pathToTsconfig.get(configPath);
-  }
+/**
+ * Read a tsconfig with its `extends` chain applied.
+ *
+ * Deliberately NOT the TypeScript compiler API: the rules here only read `references`,
+ * `compilerOptions.composite` and `compilerOptions.tsBuildInfoFile`, which is a config-file
+ * question, not a type-checking one. TypeScript 7 (the Go port) dropped the JS compiler API
+ * entirely — `ts.sys` is gone — so depending on it capped repojj at TS6 for no benefit. Dropping
+ * the peer dependency means repojj no longer cares which TypeScript, if any, the repo installs.
+ */
+export const resolveTsConfig = (configPath: string): TsConfigJsonResolved => {
+  const cached = pathToTsconfig.get(configPath);
+  if (cached !== undefined) return cached;
 
-  const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
-  if (configFile.error) {
-    throw new Error(
-      ts.formatDiagnostics([configFile.error], {
-        getCanonicalFileName: f => f,
-        getCurrentDirectory: () => cwd,
-        getNewLine: () => '\n',
-      }),
-    );
-  }
+  const tsconfig = parseTsconfig(configPath);
 
-  const parsedConfig = ts.parseJsonConfigFileContent(
-    configFile.config,
-    ts.sys,
-    path.dirname(configPath),
-  );
-
-  if (parsedConfig.errors.length > 0) {
-    throw new Error(
-      ts.formatDiagnostics(parsedConfig.errors, {
-        getCanonicalFileName: f => f,
-        getCurrentDirectory: () => cwd,
-        getNewLine: () => '\n',
-      }),
-    );
-  }
-
-  const result = {
-    compilerOptions: parsedConfig.options,
-    references: parsedConfig.projectReferences,
-  };
-
-  pathToTsconfig.set(configPath, result);
-  return result;
+  pathToTsconfig.set(configPath, tsconfig);
+  return tsconfig;
 };

@@ -17,14 +17,10 @@ const getTsconfigsNeedingComposite = async ({
 }: {
   projectRoot: string;
 }): Promise<TsconfigInfo[]> => {
-  const tsconfigs = await Promise.all(
-    (await getSubTsconfigPaths({ projectRoot })).map(async path => ({
-      path,
-      tsconfig: exclusifyUnion(
-        SubTsconfigSchema.parse(await resolveTsConfig(path, { cwd: projectRoot })),
-      ),
-    })),
-  );
+  const tsconfigs = (await getSubTsconfigPaths({ projectRoot })).map(path => ({
+    path,
+    tsconfig: exclusifyUnion(SubTsconfigSchema.parse(resolveTsConfig(path))),
+  }));
 
   return tsconfigs.filter(({ tsconfig }) => {
     if (tsconfig === undefined || tsconfig.references) return false;

@@ -15,14 +15,10 @@ export const subTsconfigTsBuildInfoRule: Rule = {
   async check({ projectRoot }) {
     const tsconfigPaths = await getSubTsconfigPaths({ projectRoot });
 
-    const tsconfigs = await Promise.all(
-      tsconfigPaths.map(async path => ({
-        path,
-        tsconfig: exclusifyUnion(
-          SubTsconfigSchema.parse(await resolveTsConfig(path, { cwd: projectRoot })),
-        ),
-      })),
-    );
+    const tsconfigs = tsconfigPaths.map(path => ({
+      path,
+      tsconfig: exclusifyUnion(SubTsconfigSchema.parse(resolveTsConfig(path))),
+    }));
 
     const errorMessages = tsconfigs.flatMap(({ path, tsconfig }) => {
       if (tsconfig === undefined) {
@@ -65,9 +61,7 @@ export const subTsconfigTsBuildInfoRule: Rule = {
 
     await Promise.all(
       tsconfigPaths.map(async path => {
-        const tsconfig = exclusifyUnion(
-          SubTsconfigSchema.parse(await resolveTsConfig(path, { cwd: projectRoot })),
-        );
+        const tsconfig = exclusifyUnion(SubTsconfigSchema.parse(resolveTsConfig(path)));
 
         // Skip root tsconfigs (those with references)
         if (tsconfig === undefined || tsconfig.references) return;
